@@ -4,9 +4,9 @@
                  
 ## Description
   
-The Book Search Engine is a simple React/node/express/mongoDB/Apollo/GraphQL web application that utilizes the Google Books API to allow a user to search, save, and explore books. It features a user sign up/login, and a personalized dashboard to allow a user to view and delete saved books.'
+The Book Search Engine is a simple React/node/express/mongoDB/Apollo/GraphQL web application that utilizes the Google Books API to allow a user to search, save, and explore books. It features a user sign up/login, and a personalized dashboard to allow a user to view and delete saved books.
 
-This project was already fully written and function, but was utilizing REST APIs to make its database calls. The project was then converted to use Apollo/GraphQL to make its database calls, which is how this deployed application runs.
+This project was already fully written and functional, but was utilizing REST APIs to make its database calls. The project was then converted to use Apollo/GraphQL to make its database calls, which is how this deployed application runs.
 
 Find the deployed application [here]()
 
@@ -47,7 +47,7 @@ No need to contribute, however feel free to fork and make it your own!
   
 ## Credits
    
-Majory of code was base code provided by edX and their respective developers. Change to Apollo/GraphQL for both client and server side written by jsparrowio (Josh Garrett) with assistance by intructors, activities, classmates, and the XPert Learning Chatbot.
+Majory of code was base code provided by edX and their respective developers. Change to Apollo/GraphQL for both client and server side written by jsparrowio (Josh Garrett) with assistance by instructors, activities, classmates, and the XPert Learning Chatbot.
   
 ## Tests
   
