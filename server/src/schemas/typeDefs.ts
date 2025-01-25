@@ -1,3 +1,5 @@
+// set up type definitions for GraphQL/Apollo
+// also sets up input types, queries, and mutations, which allow for the modification of data in the database
 const typeDefs = `
 type User {
     _id: ID
@@ -48,4 +50,5 @@ type Mutation {
 }
 `;
 
+// export typeDefs to be used elsewhere
 export default typeDefs;

@@ -1,13 +1,13 @@
+// import dependencies, including react, apollo, auth, models, and mutations
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
-
 import { useMutation } from '@apollo/client';
 import { ADD_USER } from '../utils/mutations';
 import Auth from '../utils/auth';
 import type { User } from '../models/User';
 
-// biome-ignore lint/correctness/noEmptyPattern: <explanation>
+// user signup form
 const SignupForm = ({ }: { handleModalClose: () => void }) => {
   // set initial form state
   const [userFormData, setUserFormData] = useState<User>({ username: '', email: '', password: '' });
@@ -15,14 +15,16 @@ const SignupForm = ({ }: { handleModalClose: () => void }) => {
   const [validated] = useState(false);
   // set state for alert
   const [showAlert, setShowAlert] = useState(false);
-
+  // set up mutation for apollo/graphql
   const [addUser, { error }] = useMutation(ADD_USER);
 
+  // handle the input change on the form
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setUserFormData({ ...userFormData, [name]: value });
   };
 
+  // handle the submit of the form
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -33,6 +35,7 @@ const SignupForm = ({ }: { handleModalClose: () => void }) => {
       event.stopPropagation();
     }
 
+    // try/catch for logging into the form using the ADD_USER mutation and a rest param of the user signup form data
     try {
       const { data } = await addUser({
         variables: { input: { ...userFormData } },
@@ -43,7 +46,7 @@ const SignupForm = ({ }: { handleModalClose: () => void }) => {
       console.error(err);
       setShowAlert(true);
     }
-
+    // reset login form when the user logs in
     setUserFormData({
       username: '',
       email: '',
@@ -51,6 +54,7 @@ const SignupForm = ({ }: { handleModalClose: () => void }) => {
     });
   };
 
+  // render the react component to be displayed to the user
   return (
     <>
       {/* This is needed for the validation functionality above */}
@@ -114,4 +118,5 @@ const SignupForm = ({ }: { handleModalClose: () => void }) => {
   );
 };
 
+// export the form to be imported by react
 export default SignupForm;

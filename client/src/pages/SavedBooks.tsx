@@ -1,5 +1,5 @@
+// import dependencies, including react, bootsrap, apollo, auth, models, queries, and mutations
 import { useQuery, useMutation } from '@apollo/client';
-
 import { Container, Card, Button, Row, Col, Spinner } from 'react-bootstrap';
 import Auth from '../utils/auth';
 import { Book } from '../models/Book';
@@ -7,14 +7,16 @@ import { QUERY_ME } from '../utils/queries';
 import { REMOVE_BOOK } from '../utils/mutations';
 import { useEffect } from 'react';
 
-
+// saved books page
 const SavedBooks = () => {
-
+  // set up queries and mutations, including a loading variable for when we are fetching the user data
   const { loading, data, refetch } = useQuery(QUERY_ME);
   const [removeBook, { error }] = useMutation(REMOVE_BOOK);
 
+  // store the user data in a variables
   const userData = data?.Me || {};
 
+  // refetch the user data whenever the userData changes... used for when a new book is stored on searchBooks page
   useEffect(() => { refetch() }, [userData])
 
   // create function that accepts the book's mongo _id value as param and deletes the book from the database
@@ -25,11 +27,12 @@ const SavedBooks = () => {
       return false;
     }
 
+    // using the REMOVE_BOOK mutation, remove the book from the DB
     try {
       await removeBook({
         variables: { bookId: bookId },
       });
-      // if book successfully saves to user's account, save book id to state
+      // if book successfully saves to user's account, refetch the user data
       refetch();
     } catch (err) {
       console.error(err);
@@ -37,7 +40,7 @@ const SavedBooks = () => {
 
   };
 
-  // if data isn't here yet, say so
+  // if data isn't here yet, show a loading element
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center pt-5">
@@ -47,6 +50,7 @@ const SavedBooks = () => {
     )
   }
 
+  // render the react component to be displayed to the user
   return (
     <>
       <div className='text-light bg-dark p-5'>
@@ -103,4 +107,5 @@ const SavedBooks = () => {
   );
 };
 
+// export the form to be imported by react
 export default SavedBooks;
