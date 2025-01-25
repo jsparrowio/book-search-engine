@@ -1,25 +1,30 @@
+// import dependencies, including react, apollo, auth, models, and mutations
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
-
-import { createUser } from '../utils/API';
+import { useMutation } from '@apollo/client';
+import { ADD_USER } from '../utils/mutations';
 import Auth from '../utils/auth';
 import type { User } from '../models/User';
 
-// biome-ignore lint/correctness/noEmptyPattern: <explanation>
-const SignupForm = ({}: { handleModalClose: () => void }) => {
+// user signup form
+const SignupForm = ({ }: { handleModalClose: () => void }) => {
   // set initial form state
-  const [userFormData, setUserFormData] = useState<User>({ username: '', email: '', password: '', savedBooks: [] });
+  const [userFormData, setUserFormData] = useState<User>({ username: '', email: '', password: '' });
   // set state for form validation
   const [validated] = useState(false);
   // set state for alert
   const [showAlert, setShowAlert] = useState(false);
+  // set up mutation for apollo/graphql
+  const [addUser, { error }] = useMutation(ADD_USER);
 
+  // handle the input change on the form
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setUserFormData({ ...userFormData, [name]: value });
   };
 
+  // handle the submit of the form
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -30,28 +35,26 @@ const SignupForm = ({}: { handleModalClose: () => void }) => {
       event.stopPropagation();
     }
 
+    // try/catch for logging into the form using the ADD_USER mutation and a rest param of the user signup form data
     try {
-      const response = await createUser(userFormData);
+      const { data } = await addUser({
+        variables: { input: { ...userFormData } },
+      });
 
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
-
-      const { token } = await response.json();
-      Auth.login(token);
+      Auth.login(data.addUser.token);
     } catch (err) {
       console.error(err);
       setShowAlert(true);
     }
-
+    // reset login form when the user logs in
     setUserFormData({
       username: '',
       email: '',
       password: '',
-      savedBooks: [],
     });
   };
 
+  // render the react component to be displayed to the user
   return (
     <>
       {/* This is needed for the validation functionality above */}
@@ -105,9 +108,15 @@ const SignupForm = ({}: { handleModalClose: () => void }) => {
           variant='success'>
           Submit
         </Button>
+        {error && (
+          <div className="my-3 p-3 bg-danger text-white">
+            {error.message}
+          </div>
+        )}
       </Form>
     </>
   );
 };
 
+// export the form to be imported by react
 export default SignupForm;
