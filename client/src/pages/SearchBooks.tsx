@@ -6,29 +6,52 @@ import {
   Form,
   Button,
   Card,
-  Row
+  Row,
+  Spinner
 } from 'react-bootstrap';
+import { useMutation, useQuery } from '@apollo/client';
 
+import { SAVE_BOOK } from '../utils/mutations';
+import { QUERY_ME } from "../utils/queries";
 import Auth from '../utils/auth';
-import { saveBook, searchGoogleBooks } from '../utils/API';
-import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
+import { searchGoogleBooks } from '../utils/API';
+import { saveBookIds } from '../utils/localStorage';
 import type { Book } from '../models/Book';
 import type { GoogleAPIBook } from '../models/GoogleAPIBook';
 
 const SearchBooks = () => {
+  const { data: userData, loading: userLoading } = useQuery(QUERY_ME);
+  const [loading, setLoading] = useState(true);
   // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState<Book[]>([]);
   // create state for holding our search field data
   const [searchInput, setSearchInput] = useState('');
 
   // create state to hold saved bookId values
-  const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
+  const [savedBookIds, setSavedBookIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    setLoading(true);
+    if (userData?.Me) {
+      const userSavedBookIds = userData.Me.savedBooks.map(
+        (book: Book) => book.bookId
+      );
+      setSavedBookIds(userSavedBookIds);
+      saveBookIds(savedBookIds);
+      setLoading(false);
+    } else {
+      setLoading(false);
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    console.log("Updated Saved Book IDs:", savedBookIds);
+  }, [savedBookIds]);
+
+  const [saveBook, { error }] = useMutation(SAVE_BOOK);
 
   // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
   // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
-  useEffect(() => {
-    return () => saveBookIds(savedBookIds);
-  });
 
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -75,13 +98,12 @@ const SearchBooks = () => {
     }
 
     try {
-      const response = await saveBook(bookToSave, token);
-
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
-
+      console.log('Attempting to save book...')
+      await saveBook({
+        variables: { input: bookToSave },
+      });
       // if book successfully saves to user's account, save book id to state
+      console.log("Book saved under book ID:", bookToSave.bookId)
       setSavedBookIds([...savedBookIds, bookToSave.bookId]);
     } catch (err) {
       console.error(err);
@@ -116,39 +138,53 @@ const SearchBooks = () => {
       </div>
 
       <Container>
-        <h2 className='pt-5'>
-          {searchedBooks.length
-            ? `Viewing ${searchedBooks.length} results:`
-            : 'Search for a book to begin'}
-        </h2>
-        <Row>
-          {searchedBooks.map((book) => {
-            return (
-              <Col md="4" key={book.bookId}>
-                <Card border='dark'>
-                  {book.image ? (
-                    <Card.Img src={book.image} alt={`The cover for ${book.title}`} variant='top' />
-                  ) : null}
-                  <Card.Body>
-                    <Card.Title>{book.title}</Card.Title>
-                    <p className='small'>Authors: {book.authors}</p>
-                    <Card.Text>{book.description}</Card.Text>
-                    {Auth.loggedIn() && (
-                      <Button
-                        disabled={savedBookIds?.some((savedBookId: string) => savedBookId === book.bookId)}
-                        className='btn-block btn-info'
-                        onClick={() => handleSaveBook(book.bookId)}>
-                        {savedBookIds?.some((savedBookId: string) => savedBookId === book.bookId)
-                          ? 'This book has already been saved!'
-                          : 'Save this Book!'}
-                      </Button>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            );
-          })}
-        </Row>
+        {userLoading || loading ? (
+          <div className="d-flex justify-content-center align-items-center pt-5">
+            <Spinner animation="border" role="status" />
+            <span className="ms-2">Loading...</span>
+          </div>
+        ) : (
+          <>
+            <h2 className='pt-5'>
+              {searchedBooks.length
+                ? `Viewing ${searchedBooks.length} results:`
+                : 'Search for a book to begin'}
+            </h2>
+            <Row>
+              {searchedBooks.map((book) => {
+                return (
+                  <Col md="4" key={book.bookId}>
+                    <Card border='dark'>
+                      {book.image ? (
+                        <Card.Img src={book.image} alt={`The cover for ${book.title}`} variant='top' />
+                      ) : null}
+                      <Card.Body>
+                        <Card.Title>{book.title}</Card.Title>
+                        <p className='small'>Authors: {book.authors}</p>
+                        <Card.Text>{book.description}</Card.Text>
+                        {Auth.loggedIn() && (
+                          <Button
+                            disabled={savedBookIds?.some((savedBookId: string) => savedBookId === book.bookId)}
+                            className='btn-block btn-info'
+                            onClick={() => handleSaveBook(book.bookId)}>
+                            {savedBookIds?.some((savedBookId: string) => savedBookId === book.bookId)
+                              ? 'This book has already been saved!'
+                              : 'Save this Book!'}
+                          </Button>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                );
+              })}
+            </Row>
+            {error && (
+              <div className="col-12 my-3 bg-danger text-white p-3">
+                {error.message}
+              </div>
+            )}
+          </>
+        )}
       </Container>
     </>
   );
