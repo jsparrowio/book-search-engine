@@ -28,22 +28,24 @@ const startApolloServer = async () => {
   app.use(express.json());
 
   // set up graphql to make test queries
-  app.use('/graphql', expressMiddleware(server as any,
-    {
+  app.use('/graphql', expressMiddleware(server as any
+    ,{
       context: authenticateToken as any
     }
   ));
 
   // set up production mode
   // if we're in production, serve client/build as static assets
-  if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../../client/build')));
+  // if (process.env.NODE_ENV === 'production') {
+    const address = path.join(__dirname, '../../client/dist');
+    console.log("address!", address);
+    app.use(express.static(address));
 
 
     app.get('*', (_req, res) => {
       res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
     });
-  }
+  // }
 
   // set up error message for mongoDB
   db.on('error', console.error.bind(console, 'MongoDB connection error:'));
